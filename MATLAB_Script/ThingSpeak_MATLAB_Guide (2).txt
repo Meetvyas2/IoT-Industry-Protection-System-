@@ -1,0 +1,87 @@
+ThingSpeak MATLAB Setup Guide
+====================================
+Project: IoT Industry Protection System
+Folder: ThingSpeak_Setup
+
+------------------------------------
+Step 1: Open ThingSpeak MATLAB Analysis
+------------------------------------
+1. Go to https://thingspeak.com and log in to your account.
+2. Open your channel (example: IoT Industry Protection).
+3. Click on "Apps" → "MATLAB Analysis" → "New Script".
+4. Delete any existing code and paste the below code.
+
+------------------------------------
+Step 2: Paste This MATLAB Code
+------------------------------------
+% === User Config ===
+channelID = YOUR_CHANNEL_ID;       % Replace with your ThingSpeak channel ID
+readAPIKey = 'YOUR_READ_API_KEY';  % Replace with your Read API Key
+
+% === Read Sensor Data ===
+temp = thingSpeakRead(channelID, 'Fields', 1, 'ReadKey', readAPIKey, 'NumPoints', 1);
+gas = thingSpeakRead(channelID, 'Fields', 2, 'ReadKey', readAPIKey, 'NumPoints', 1);
+ldr = thingSpeakRead(channelID, 'Fields', 3, 'ReadKey', readAPIKey, 'NumPoints', 1);
+flame = thingSpeakRead(channelID, 'Fields', 4, 'ReadKey', readAPIKey, 'NumPoints', 1);
+
+% === Thresholds ===
+alert = false;
+message = "";
+
+if temp > 50
+    alert = true;
+    message = message + sprintf("🔥 High Temp: %.2f°C\n", temp);
+end
+
+if gas > 400
+    alert = true;
+    message = message + sprintf("💨 Gas Level: %d\n", gas);
+end
+
+if flame > 0.5
+    alert = true;
+    message = message + "🔥 Flame Detected!\n";
+end
+
+if ldr < 500
+    alert = true;
+    message = message + sprintf("🌑 Low Light: %d\n", ldr);
+end
+
+% === Send Email if Any Alert ===
+if alert
+    setpref('Internet','SMTP_Server','smtp.gmail.com');
+    setpref('Internet','E_mail','YOUR_EMAIL@gmail.com');
+    setpref('Internet','SMTP_Username','YOUR_EMAIL@gmail.com');
+    setpref('Internet','SMTP_Password','YOUR_APP_PASSWORD');  % Paste Gmail App Password here
+
+    props = java.lang.System.getProperties;
+    props.setProperty('mail.smtp.auth','true');
+    props.setProperty('mail.smtp.starttls.enable','true');
+
+    % Send the alert email
+    sendmail('YOUR_EMAIL@gmail.com', 'IoT Industry Protection Alert', message);
+end
+
+------------------------------------
+Step 3: Generate Gmail App Password
+------------------------------------
+1. Go to https://myaccount.google.com/apppasswords
+2. Log in using your Gmail account.
+3. Select “Mail” and “Windows Computer” as the app and device.
+4. Copy the 16-character password shown.
+5. Paste it in place of 'YOUR_APP_PASSWORD' in the MATLAB code.
+
+------------------------------------
+Step 4: Save and Run the MATLAB Script
+------------------------------------
+- After pasting your details, click on "Save and Run".
+- The script will check sensor data and send an email alert if any threshold is crossed.
+
+------------------------------------
+Notes
+------------------------------------
+✔ Use your own Gmail and App Password. 
+✔ Do NOT share your App Password publicly.
+✔ You can schedule this MATLAB script to run automatically from ThingSpeak at intervals.
+✔ This code reads temperature, gas, flame, and light data from ThingSpeak and alerts via email.
